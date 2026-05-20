@@ -1,8 +1,11 @@
 {
-  "name": "EPAM Salesforce Practice – Claude Marketplace",
+  "name": "epam-salesforce-practice",
   "description": "Internal skill marketplace for the EPAM Salesforce practice. Install once; receive all future skill updates automatically.",
   "version": "1.0.0",
-  "maintainer": "siba_padhy@epam.com",
+  "owner": {
+    "name": "Siba Padhy",
+    "email": "siba_padhy@epam.com"
+  },
   "plugins": [
     {
       "name": "attention-today",
