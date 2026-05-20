@@ -1,0 +1,15 @@
+{
+  "name": "EPAM Salesforce Practice – Claude Marketplace",
+  "description": "Internal skill marketplace for the EPAM Salesforce practice. Install once; receive all future skill updates automatically.",
+  "version": "1.0.0",
+  "maintainer": "siba_padhy@epam.com",
+  "plugins": [
+    {
+      "name": "attention-today",
+      "path": "plugins/attention-today",
+      "description": "Live status page showing everything that needs your attention today, sorted by priority tier.",
+      "version": "0.1.0",
+      "tags": ["productivity", "outlook", "teams", "daily-briefing"]
+    }
+  ]
+}

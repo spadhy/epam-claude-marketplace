@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Attention Today</title>
+<style>
+  :root {
+    --urgent:   #dc2626;
+    --critical: #ea580c;
+    --necessary:#2563eb;
+    --good:     #16a34a;
+    --bg:       #f8fafc;
+    --card:     #ffffff;
+    --border:   #e2e8f0;
+    --text:     #1e293b;
+    --muted:    #64748b;
+    --radius:   10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: var(--bg); color: var(--text); padding: 20px; }
+  header { display: flex; justify-content: space-between; align-items: center;
+           margin-bottom: 24px; }
+  header h1 { font-size: 1.4rem; font-weight: 700; }
+  header .meta { font-size: 0.8rem; color: var(--muted); }
+  .tier { margin-bottom: 28px; }
+  .tier-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .tier-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .tier-header h2 { font-size: 1rem; font-weight: 700; text-transform: uppercase;
+                    letter-spacing: .05em; }
+  .tier-count { font-size: 0.78rem; color: var(--muted); margin-left: auto; }
+  .card { background: var(--card); border: 1px solid var(--border);
+          border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px;
+          display: flex; flex-direction: column; gap: 4px; position: relative; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card-source { font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+                 letter-spacing: .06em; color: var(--muted); }
+  .card-time { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+  .card-subject { font-size: 0.92rem; font-weight: 600; line-height: 1.3; }
+  .card-from { font-size: 0.8rem; color: var(--muted); }
+  .card-snippet { font-size: 0.8rem; color: var(--muted); margin-top: 2px;
+                  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-footer { display: flex; justify-content: flex-end; margin-top: 6px; }
+  .open-link { font-size: 0.78rem; font-weight: 600; text-decoration: none;
+               color: var(--necessary); }
+  .open-link:hover { text-decoration: underline; }
+  .border-urgent   { border-left: 4px solid var(--urgent); }
+  .border-critical { border-left: 4px solid var(--critical); }
+  .border-necessary{ border-left: 4px solid var(--necessary); }
+  .border-good     { border-left: 4px solid var(--good); }
+  .dot-urgent   { background: var(--urgent); }
+  .dot-critical { background: var(--critical); }
+  .dot-necessary{ background: var(--necessary); }
+  .dot-good     { background: var(--good); }
+  .empty { text-align: center; padding: 18px; color: var(--muted);
+           font-size: 0.85rem; background: var(--card); border: 1px solid var(--border);
+           border-radius: var(--radius); }
+  .unavailable { text-align: center; padding: 12px; color: var(--muted);
+                 font-size: 0.82rem; font-style: italic; background: #f1f5f9;
+                 border: 1px dashed var(--border); border-radius: var(--radius);
+                 margin-bottom: 8px; }
+  .loading { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
+  .error-msg { color: var(--urgent); font-size: 0.82rem; padding: 8px 12px;
+               background: #fef2f2; border-radius: 6px; margin-bottom: 8px; }
+  .last-updated { text-align: right; font-size: 0.75rem; color: var(--muted);
+                  margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Attention Today</h1>
+    <div class="meta" id="date-label"></div>
+  </div>
+</header>
+
+<div id="root"><div class="loading">Loading your items…</div></div>
+<div class="last-updated" id="last-updated"></div>
+
+<script>
+// ─── CONFIGURATION (substituted by skill at build time) ────────────────────
+const TOOL_EMAIL    = "__TOOL_EMAIL__";
+const TOOL_CALENDAR = "__TOOL_CALENDAR__";
+const TOOL_CHAT     = "__TOOL_CHAT__";
+const USER_DOMAIN   = "__USER_DOMAIN__";
+const TODAY_ISO     = "__TODAY_DATE__";
+// ───────────────────────────────────────────────────────────────────────────
+
+const UNAVAILABLE = "__UNAVAILABLE__";
+
+// Priority tier config
+const TIERS = [
+  { id: "urgent",    label: "Urgent",          dot: "dot-urgent",    card: "border-urgent"   },
+  { id: "critical",  label: "Critical",        dot: "dot-critical",  card: "border-critical" },
+  { id: "necessary", label: "Necessary",       dot: "dot-necessary", card: "border-necessary"},
+  { id: "good",      label: "Good to Complete",dot: "dot-good",      card: "border-good"     },
+];
+
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+
+function fmtTime(isoStr) {
+  if (!isoStr) return "";
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function minutesFromNow(isoStr) {
+  if (!isoStr) return Infinity;
+  return (new Date(isoStr) - Date.now()) / 60000;
+}
+
+function isFromDomain(emailAddr, domain) {
+  return domain && domain !== UNAVAILABLE && emailAddr && emailAddr.toLowerCase().endsWith("@" + domain.toLowerCase());
+}
+
+function containsUrgentKeywords(str) {
+  if (!str) return false;
+  const lower = str.toLowerCase();
+  return ["urgent", "action required", "approval needed", "asap", "by end of day", "eod", "immediate"].some(k => lower.includes(k));
+}
+
+// ─── CLASSIFICATION ────────────────────────────────────────────────────────
+
+function classifyEmail(item) {
+  const importance = (item.importance || "").toLowerCase();
+  const subject = item.subject || "";
+  const from = item.from?.emailAddress?.address || item.from || "";
+  const isUnread = item.isRead === false;
+
+  if (importance === "high" || containsUrgentKeywords(subject)) return "urgent";
+  if (isUnread && isFromDomain(from, USER_DOMAIN)) return "critical";
+  if (isUnread) return "necessary";
+  return "good";
+}
+
+function classifyCalendar(item) {
+  const start = item.start?.dateTime || item.startDateTime || item.start;
+  const mins = minutesFromNow(start);
+  if (mins >= 0 && mins <= 30)  return "urgent";
+  if (mins >= 0 && mins <= 120) return "critical";
+  if (mins >= 0)                return "necessary";
+  return null; // past event, skip
+}
+
+function classifyChat(item) {
+  const isDM = item.isDirect === true || item.chatType === "oneOnOne" || item.type === "dm";
+  if (isDM) return "critical";
+  return "necessary";
+}
+
+// ─── RENDER ────────────────────────────────────────────────────────────────
+
+function card(item, tierClass) {
+  const el = document.createElement("div");
+  el.className = `card ${tierClass}`;
+  el.innerHTML = `
+    <div class="card-top">
+      <span class="card-source">${escHtml(item._source || "")}</span>
+      <span class="card-time">${escHtml(item._time || "")}</span>
+    </div>
+    <div class="card-subject">${escHtml(item._subject || "(no subject)")}</div>
+    <div class="card-from">${escHtml(item._from || "")}</div>
+    ${item._snippet ? `<div class="card-snippet">${escHtml(item._snippet)}</div>` : ""}
+    ${item._url ? `<div class="card-footer"><a class="open-link" href="${item._url}" target="_blank" rel="noopener">Open ↗</a></div>` : ""}
+  `;
+  return el;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function renderAll(buckets) {
+  const root = document.getElementById("root");
+  root.innerHTML = "";
+
+  for (const tier of TIERS) {
+    const items = buckets[tier.id] || [];
+    const section = document.createElement("div");
+    section.className = "tier";
+    section.innerHTML = `
+      <div class="tier-header">
+        <div class="tier-dot ${tier.dot}"></div>
+        <h2>${tier.label}</h2>
+        <span class="tier-count">${items.length} item${items.length !== 1 ? "s" : ""}</span>
+      </div>
+    `;
+    if (items.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "Nothing here — you're clear in this tier.";
+      section.appendChild(empty);
+    } else {
+      for (const item of items) {
+        section.appendChild(card(item, tier.card));
+      }
+    }
+    root.appendChild(section);
+  }
+}
+
+// ─── DATA FETCH ────────────────────────────────────────────────────────────
+
+async function fetchAll() {
+  const buckets = { urgent: [], critical: [], necessary: [], good: [] };
+  const errors  = [];
+
+  // ── Email ──
+  if (TOOL_EMAIL && TOOL_EMAIL !== UNAVAILABLE) {
+    try {
+      const res = await window.cowork.callMcpTool(TOOL_EMAIL, { query: "", max_results: 30 });
+      const emails = extractList(res);
+      for (const e of emails) {
+        const tier = classifyEmail(e);
+        const from = e.from?.emailAddress?.address || e.from || "";
+        const fromName = e.from?.emailAddress?.name || from;
+        buckets[tier].push({
+          _source: "Outlook Email",
+          _subject: e.subject,
+          _from: fromName,
+          _time: fmtTime(e.receivedDateTime || e.sentDateTime),
+          _snippet: (e.bodyPreview || "").slice(0, 120),
+          _url: e.webLink || null,
+        });
+      }
+    } catch (err) {
+      errors.push("Email: " + err.message);
+    }
+  } else {
+    addUnavailable(buckets, "Outlook email not connected");
+  }
+
+  // ── Calendar ──
+  if (TOOL_CALENDAR && TOOL_CALENDAR !== UNAVAILABLE) {
+    try {
+      const todayStart = TODAY_ISO + "T00:00:00";
+      const todayEnd   = TODAY_ISO + "T23:59:59";
+      const res = await window.cowork.callMcpTool(TOOL_CALENDAR, {
+        query: "",
+        start_datetime: todayStart,
+        end_datetime: todayEnd,
+        max_results: 20,
+      });
+      const events = extractList(res);
+      for (const e of events) {
+        const tier = classifyCalendar(e);
+        if (!tier) continue;
+        const start = e.start?.dateTime || e.startDateTime || e.start;
+        buckets[tier].push({
+          _source: "Outlook Calendar",
+          _subject: e.subject || e.summary || "(no title)",
+          _from: (e.organizer?.emailAddress?.name || e.organizer || ""),
+          _time: fmtTime(start),
+          _snippet: e.bodyPreview ? e.bodyPreview.slice(0, 100) : "",
+          _url: e.webLink || null,
+        });
+      }
+    } catch (err) {
+      errors.push("Calendar: " + err.message);
+    }
+  } else {
+    addUnavailable(buckets, "Outlook calendar not connected");
+  }
+
+  // ── Teams Chat ──
+  if (TOOL_CHAT && TOOL_CHAT !== UNAVAILABLE) {
+    try {
+      const res = await window.cowork.callMcpTool(TOOL_CHAT, { query: "", max_results: 20 });
+      const msgs = extractList(res);
+      for (const m of msgs) {
+        const tier = classifyChat(m);
+        const from = m.from?.user?.displayName || m.sender || m.from || "";
+        buckets[tier].push({
+          _source: "Microsoft Teams",
+          _subject: m.subject || "Direct message",
+          _from: from,
+          _time: fmtTime(m.createdDateTime || m.timestamp),
+          _snippet: (m.body?.content || m.content || "").replace(/<[^>]*>/g,"").slice(0, 120),
+          _url: m.webUrl || null,
+        });
+      }
+    } catch (err) {
+      errors.push("Teams: " + err.message);
+    }
+  } else {
+    addUnavailable(buckets, "Microsoft Teams not connected");
+  }
+
+  // Sort each bucket by time desc
+  for (const tier of Object.keys(buckets)) {
+    buckets[tier].sort((a, b) => (b._time || "").localeCompare(a._time || ""));
+  }
+
+  if (errors.length > 0) {
+    const errDiv = document.createElement("div");
+    errDiv.innerHTML = errors.map(e => `<div class="error-msg">⚠ ${escHtml(e)}</div>`).join("");
+    document.getElementById("root").prepend(errDiv);
+  }
+
+  return buckets;
+}
+
+function extractList(res) {
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray(res.value)) return res.value;
+  if (res && Array.isArray(res.items)) return res.items;
+  if (res && Array.isArray(res.messages)) return res.messages;
+  if (res && Array.isArray(res.events)) return res.events;
+  if (res && Array.isArray(res.emails)) return res.emails;
+  if (res && typeof res === "object") {
+    // Try first array-valued key
+    for (const key of Object.keys(res)) {
+      if (Array.isArray(res[key])) return res[key];
+    }
+  }
+  return [];
+}
+
+function addUnavailable(buckets, label) {
+  // Push a sentinel item that renders as an unavailable banner
+  buckets.necessary.push({
+    _source: "Not connected",
+    _subject: label,
+    _from: "",
+    _time: "",
+    _snippet: "Connect this source in Settings → Connectors to see items here.",
+    _url: null,
+    _unavailable: true,
+  });
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+
+async function init() {
+  // Date label
+  const now = new Date();
+  document.getElementById("date-label").textContent = now.toLocaleDateString([], {
+    weekday: "long", year: "numeric", month: "long", day: "numeric"
+  });
+
+  const buckets = await fetchAll();
+  renderAll(buckets);
+
+  document.getElementById("last-updated").textContent =
+    "Last updated: " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+init();
+</script>
+</body>
+</html>
