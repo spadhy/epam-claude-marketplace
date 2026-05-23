@@ -1,23 +1,8 @@
-# CODEOWNERS – epam-claude-marketplace
-#
-# Each plugin has a named maintainer. PRs touching a plugin path require
-# approval from that plugin's owner before merge.
-#
-# Format: <path-pattern>  <@github-handle or email>
-# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# CODEOWNERS — epam-claude-marketplace
+# PRs touching any plugin require approval from that plugin's maintainer.
 
-# Global fallback — practice lead reviews anything not covered below
-*  @siba_padhy
-
-# Marketplace manifest — practice lead owns the registry
-/.claude-plugin/  @siba_padhy
-
-# Governance docs
-/README.md        @siba_padhy
-/CONTRIBUTING.md  @siba_padhy
-
-# ── Plugins ────────────────────────────────────────────────────────────────
-# Add one line per plugin as new ones are contributed.
-# Pattern: /plugins/<plugin-name>/  @<maintainer-github-handle>
-
-/plugins/attention-today/  @siba_padhy
+*                                    @spadhy
+/.claude-plugin/                     @spadhy
+/plugins/attention-today/            @spadhy
+/plugins/team-progress/              @spadhy
+/plugins/salesforce-solution-design/ @spadhy

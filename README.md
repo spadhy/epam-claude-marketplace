@@ -1,42 +1,36 @@
-# EPAM Salesforce Practice – Claude Marketplace
+# EPAM Salesforce Practice — Claude Marketplace
 
-A shared library of Claude skills for the EPAM Salesforce practice. Install once and get all future skill updates automatically. Anyone on the team can contribute.
-
----
+Shared Claude skills for the EPAM Salesforce practice. Install once; get all future updates automatically.
 
 ## Install
 
-1. Open Claude desktop → Settings → Plugins → Add marketplace
-2. Paste this URL: `https://github.epam.com/<your-org>/epam-claude-marketplace`
-3. Click **Install all** (or pick individual plugins)
+```bash
+/plugin marketplace add spadhy/epam-claude-marketplace
+```
 
-That's it. When skills are updated, your Claude pulls the changes on next restart.
+Then install individual plugins:
 
----
+```bash
+/plugin install attention-today
+/plugin install team-progress
+/plugin install salesforce-solution-design
+```
 
-## Available plugins
+## Plugins
 
-| Plugin | What it does | Trigger phrase |
+| Plugin | What it does | Trigger |
 |---|---|---|
-| [attention-today](./plugins/attention-today/README.md) | Live status page: everything needing your attention today, sorted by Urgent / Critical / Necessary / Good-to-complete | "what needs my attention today" / "build my attention page" |
-
----
+| `attention-today` | Live status page sorted by Urgent / Critical / Necessary / Good-to-complete | "what needs my attention today" |
+| `team-progress` | Weekly team digest — completions, blockers, upcoming deadlines | "team progress this week" |
+| `salesforce-solution-design` | Scope, architect, and document Salesforce implementations | "design a Salesforce solution" |
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow. Short version:
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Each plugin has a named maintainer in its folder.
+PRs require maintainer approval (enforced by CODEOWNERS).
 
-- Each plugin has a named **maintainer** in its `MAINTAINERS.md`
-- Submit a PR; the plugin maintainer reviews within 3 business days
-- Skill naming convention: `sf-<verb>-<noun>` (e.g. `sf-build-account-brief`)
-- Add your skill to the table above and bump the version in `marketplace.json`
+## Local foundation skill
 
----
-
-## Roadmap (next plugins)
-
-- `sf-build-account-brief` — one-click Salesforce account summary from CRM + email + news
-- `sf-draft-rfp-response` — draft an RFP response from a template + account context
-- `sf-weekly-pipeline-digest` — weekly pipeline health digest from Salesforce + Jira
-
-Want to claim one? Open an issue or ping the #epam-claude-skills channel.
+The `architect-foundation` skill is a **local user skill**, not a plugin in this marketplace.
+Install it separately following the setup guide in your onboarding docs. It provides the
+five-domain architecture checklist that `salesforce-solution-design` references.

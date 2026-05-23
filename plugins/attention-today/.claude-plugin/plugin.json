@@ -1,11 +1,4 @@
 {
   "name": "attention-today",
-  "displayName": "Attention Today",
-  "version": "0.1.0",
-  "description": "Live status page showing everything that needs your attention today across Outlook email, calendar, and Teams — sorted by Urgent, Critical, Necessary, and Good-to-complete priority tiers.",
-  "author": {
-    "name": "Siba Padhy",
-    "email": "siba_padhy@epam.com"
-  },
-  "keywords": ["productivity", "outlook", "teams", "daily-briefing"]
+  "description": "Live status page showing what needs your attention today across Outlook and Teams, sorted by priority tier."
 }

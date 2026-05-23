@@ -1,7 +1,6 @@
 {
   "name": "epam-salesforce-practice",
-  "description": "Internal skill marketplace for the EPAM Salesforce practice. Install once; receive all future skill updates automatically.",
-  "version": "1.0.0",
+  "description": "Shared Claude skill marketplace for the EPAM Salesforce practice.",
   "owner": {
     "name": "Siba Padhy",
     "email": "siba_padhy@epam.com"
@@ -9,10 +8,18 @@
   "plugins": [
     {
       "name": "attention-today",
-      "path": "plugins/attention-today",
-      "description": "Live status page showing everything that needs your attention today, sorted by priority tier.",
-      "version": "0.1.0",
-      "tags": ["productivity", "outlook", "teams", "daily-briefing"]
+      "source": "./plugins/attention-today",
+      "description": "Live status page showing what needs your attention today, sorted by Urgent / Critical / Necessary / Good-to-complete."
+    },
+    {
+      "name": "team-progress",
+      "source": "./plugins/team-progress",
+      "description": "Weekly team progress digest — surfaces blockers, completions, and upcoming deadlines across Jira and email."
+    },
+    {
+      "name": "salesforce-solution-design",
+      "source": "./plugins/salesforce-solution-design",
+      "description": "Salesforce solution design assistant — scopes, architects, and documents Salesforce implementations using practice standards."
     }
   ]
 }
