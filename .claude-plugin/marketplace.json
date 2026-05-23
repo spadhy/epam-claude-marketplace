@@ -21,5 +21,11 @@
       "source": "./plugins/salesforce-solution-design",
       "description": "Salesforce solution design assistant — scopes, architects, and documents Salesforce implementations using practice standards."
     }
+    {
+      "name": "meeting-brief",
+      "source": "./plugins/meeting-brief-agent",
+      "description": "AI-powered pre-meeting research and brief generator for the EPAM Salesforce Practice. Pulls from EPAM internal systems (Presales, Delivery Central, PeopleCentral, OneHub Expertise), Microsoft 365 (Outlook email history, SharePoint prior briefs), and public sources (LinkedIn, company news, web) to produce a 12-section intelligence brief and a formatted Word document. Trigger phrases: 'prepare for a meeting', 'generate a meeting brief', 'research a contact', 'brief me on someone'.",
+      "repository": "https://github.com/spadhy/meeting-brief-agent"
+    }
   ]
 }
