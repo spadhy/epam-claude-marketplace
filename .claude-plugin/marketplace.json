@@ -20,7 +20,7 @@
       "name": "salesforce-solution-design",
       "source": "./plugins/salesforce-solution-design",
       "description": "Salesforce solution design assistant — scopes, architects, and documents Salesforce implementations using practice standards."
-    }
+    },
     {
       "name": "meeting-brief",
       "source": "./plugins/meeting-brief-agent",
