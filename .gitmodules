@@ -1,0 +1,3 @@
+[submodule "plugins/meeting-brief-agent"]
+	path = plugins/meeting-brief-agent
+	url = https://github.com/spadhy/meeting-brief-agent.git
