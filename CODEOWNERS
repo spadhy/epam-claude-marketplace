@@ -1,8 +1,27 @@
 # CODEOWNERS — epam-claude-marketplace
-# PRs touching any plugin require approval from that plugin's maintainer.
+#
+# Two-tier review model:
+#   - Root files and marketplace.json → marketplace owner (@spadhy) + designated reviewers
+#   - Plugin folders → that plugin's named maintainer
+#
+# Designated reviewers (empowered to approve PRs alongside @spadhy):
+#   @spadhy          — Marketplace owner
+#   @[REVIEWER_2]    — Replace with second practice lead's GitHub handle
+#   @[REVIEWER_3]    — Replace with third practice lead's GitHub handle
+#
+# Format: /path/  @github-handle
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-*                                    @spadhy
-/.claude-plugin/                     @spadhy
+# Marketplace root — all changes require marketplace owner + a designated reviewer
+*                                    @spadhy @[REVIEWER_2]
+/.claude-plugin/                     @spadhy @[REVIEWER_2]
+/README.md                           @spadhy @[REVIEWER_2]
+/CONTRIBUTING.md                     @spadhy @[REVIEWER_2]
+/CODEOWNERS                          @spadhy @[REVIEWER_2]
+
+# Plugins — each plugin owned by its named maintainer
+# (replace @spadhy with the actual maintainer handle when a new owner takes over)
 /plugins/attention-today/            @spadhy
 /plugins/team-progress/              @spadhy
 /plugins/salesforce-solution-design/ @spadhy
+/plugins/meeting-brief-agent/        @spadhy
